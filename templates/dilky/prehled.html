@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Přehled dílků — LEGO Inventář{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h1><i class="bi bi-puzzle-fill"></i> Dílky</h1>
+      <p class="mb-0 mt-1" style="font-weight:600;color:#555;">
+        {{ dilky|length }} druhů
+      </p>
+    </div>
+    <a href="/dilky/hledat" class="btn btn-lego-red">
+      <i class="bi bi-plus-circle-fill"></i> Přidat dílek
+    </a>
+  </div>
+</div>
+
+<!-- Filtry -->
+<div class="card-lego card mb-4">
+  <div class="card-body p-3">
+    <form method="GET" action="/dilky/" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label fw-700 mb-1">Filtr barva</label>
+        <select name="barva" class="form-select" style="border-radius:10px;">
+          <option value="">Všechny barvy</option>
+          {% for b in vsechny_barvy %}
+          <option value="{{ b }}" {% if filtr_barva == b %}selected{% endif %}>{{ b }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label fw-700 mb-1">Filtr tvar / kategorie</label>
+        <select name="tvar" class="form-select" style="border-radius:10px;">
+          <option value="">Všechny tvary</option>
+          {% for t in vsechny_tvary %}
+          <option value="{{ t }}" {% if filtr_tvar == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-lego-blue w-100">
+          <i class="bi bi-funnel-fill"></i> Filtrovat
+        </button>
+      </div>
+      {% if filtr_barva or filtr_tvar %}
+      <div class="col-md-2">
+        <a href="/dilky/" class="btn btn-outline-secondary w-100">
+          <i class="bi bi-x-circle"></i> Zrušit
+        </a>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+{% if dilky %}
+<!-- Tabulka -->
+<div class="card-lego card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" style="border-radius:16px;overflow:hidden;">
+        <thead style="background:#FFD700;">
+          <tr>
+            <th style="padding:14px 16px;font-weight:800;color:#333;border:none;" width="80">Foto</th>
+            <th style="padding:14px 16px;font-weight:800;color:#333;border:none;">Dílek</th>
+            <th style="padding:14px 16px;font-weight:800;color:#333;border:none;">Barva</th>
+            <th style="padding:14px 16px;font-weight:800;color:#333;border:none;">Přidáno</th>
+            <th style="padding:14px 16px;font-weight:800;color:#333;border:none;text-align:center;">Počet ks</th>
+            <th style="padding:14px 16px;font-weight:800;color:#333;border:none;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in dilky %}
+          <tr style="border-left: 5px solid {{ d.barva_hex or '#eee' }};">
+            <td style="padding:10px 16px;vertical-align:middle;">
+              {% if d.obrazek_url %}
+                <img src="{{ d.obrazek_url }}" alt="{{ d.nazev }}"
+                     style="max-width:55px;max-height:55px;object-fit:contain;">
+              {% else %}
+                <div style="width:55px;height:55px;background:#f0f4ff;border-radius:8px;
+                            display:flex;align-items:center;justify-content:center;color:#ccc;font-size:1.5rem;">
+                  <i class="bi bi-puzzle"></i>
+                </div>
+              {% endif %}
+            </td>
+            <td style="padding:10px 16px;vertical-align:middle;">
+              <div style="font-weight:800;color:#1a1a1a;">{{ d.nazev }}</div>
+              <div style="font-size:0.8rem;color:#888;font-weight:700;">#{{ d.part_num }}</div>
+              {% if d.poznamka %}
+                <div style="font-size:0.8rem;color:#aaa;font-style:italic;">{{ d.poznamka }}</div>
+              {% endif %}
+            </td>
+            <td style="padding:10px 16px;vertical-align:middle;">
+              {% if d.barva %}
+                <div class="d-flex align-items-center">
+                  {% if d.barva_hex %}
+                    <span class="color-dot" style="background:{{ d.barva_hex }};"></span>
+                  {% endif %}
+                  <span style="font-weight:700;font-size:0.9rem;">{{ d.barva }}</span>
+                </div>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td style="padding:10px 16px;vertical-align:middle;">
+              <span style="font-size:0.85rem;color:#888;font-weight:600;">
+                {{ d.datum_pridani.strftime('%d.%m.%Y') }}
+              </span>
+            </td>
+            <td style="padding:10px 16px;vertical-align:middle;text-align:center;">
+              <div class="pocet-control justify-content-center">
+                <form method="POST" action="/dilky/{{ d.id }}/upravit-pocet" style="display:inline;">
+                  <input type="hidden" name="akce" value="minus">
+                  <button type="submit" class="btn btn-sm btn-lego-yellow px-2 py-1"
+                          {% if d.pocet_ks <= 1 %}disabled{% endif %}>
+                    <i class="bi bi-dash-lg"></i>
+                  </button>
+                </form>
+                <span class="pocet-badge">{{ d.pocet_ks }}</span>
+                <form method="POST" action="/dilky/{{ d.id }}/upravit-pocet" style="display:inline;">
+                  <input type="hidden" name="akce" value="plus">
+                  <button type="submit" class="btn btn-sm btn-lego-yellow px-2 py-1">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+            <td style="padding:10px 16px;vertical-align:middle;text-align:right;">
+              <form method="POST" action="/dilky/{{ d.id }}/smazat"
+                    onsubmit="return confirm('Smazat dílek {{ d.part_num }}?')">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-trash-fill"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<div class="text-center py-5">
+  <div style="font-size:5rem;color:#ddd;"><i class="bi bi-puzzle"></i></div>
+  <h4 class="text-muted mt-3">
+    {% if filtr_barva or filtr_tvar %}
+      Žádné dílky neodpovídají filtru
+    {% else %}
+      Zatím žádné dílky
+    {% endif %}
+  </h4>
+  <a href="/dilky/hledat" class="btn btn-lego-red mt-2">
+    <i class="bi bi-plus-circle-fill"></i> Přidat první dílek
+  </a>
+</div>
+{% endif %}
+{% endblock %}

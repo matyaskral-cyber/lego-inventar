@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Hledat set — LEGO Inventář{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="bi bi-search"></i> Hledat set</h1>
+  <p class="mb-0 mt-1" style="font-weight:600;color:#555;">Zadej číslo setu (např. 75192-1, 10300)</p>
+</div>
+
+<div class="card-lego card mb-4">
+  <div class="card-body p-4">
+    <form method="POST" action="/sety/hledat">
+      <input type="hidden" name="action" value="hledat">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-8">
+          <label class="form-label fw-700">Číslo setu</label>
+          <input type="text" name="set_num" class="form-control form-control-lg"
+                 placeholder="Např. 75192-1 nebo 75192..." required
+                 value="{{ request.form.get('set_num', '') if nahled or chyba else '' }}"
+                 style="border-radius:10px;font-weight:700;">
+          <div class="form-text">Číslo setu najdeš na krabici nebo na Rebrickable.com. Suffix -1 se doplní automaticky.</div>
+        </div>
+        <div class="col-md-4">
+          <button type="submit" class="btn btn-lego-blue btn-lg w-100">
+            <i class="bi bi-search"></i> Vyhledat
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if chyba %}
+<div class="alert alert-danger">
+  <i class="bi bi-exclamation-triangle-fill"></i> {{ chyba }}
+</div>
+{% endif %}
+
+{% if nahled %}
+<div class="card-lego card mb-4">
+  <div class="card-header py-3" style="background:#006CB7;">
+    <h5 class="mb-0 fw-800 text-white">
+      <i class="bi bi-check-circle-fill"></i> Set nalezen!
+    </h5>
+  </div>
+  <div class="card-body p-4">
+    <div class="row g-4 align-items-start">
+      <!-- Obrázek -->
+      <div class="col-md-3 text-center">
+        {% if nahled.set_img_url %}
+          <img src="{{ nahled.set_img_url }}" alt="{{ nahled.name }}"
+               style="max-width:200px;max-height:200px;object-fit:contain;
+                      background:#f8f9fa;border-radius:12px;padding:10px;">
+        {% else %}
+          <div style="width:200px;height:200px;background:#f0f4ff;border-radius:12px;
+                      display:flex;align-items:center;justify-content:center;
+                      font-size:5rem;color:#ccc;margin:0 auto;">
+            <i class="bi bi-box-seam"></i>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Info -->
+      <div class="col-md-5">
+        <h3 class="fw-900" style="color:#1a1a1a;">{{ nahled.name }}</h3>
+        <div class="mb-2">
+          <span class="badge" style="background:#006CB7;color:#fff;font-size:1rem;padding:6px 14px;">
+            #{{ nahled.set_num }}
+          </span>
+        </div>
+        {% if nahled.year %}
+          <div class="mb-2">
+            <span class="text-muted fw-600"><i class="bi bi-calendar3"></i> Rok:</span>
+            <span class="fw-700">{{ nahled.year }}</span>
+          </div>
+        {% endif %}
+        {% if nahled.theme_id %}
+          <div class="mb-2">
+            <span class="text-muted fw-600"><i class="bi bi-collection-fill"></i> Téma ID:</span>
+            <span class="fw-700">{{ nahled.theme_id }}</span>
+          </div>
+        {% endif %}
+        {% if nahled.num_parts %}
+          <div class="mb-2">
+            <span class="text-muted fw-600"><i class="bi bi-puzzle-fill"></i> Počet dílků:</span>
+            <span class="fw-700 text-danger">{{ nahled.num_parts }}</span>
+          </div>
+        {% endif %}
+        <div class="mt-2">
+          <a href="https://rebrickable.com/sets/{{ nahled.set_num }}/" target="_blank"
+             class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-box-arrow-up-right"></i> Rebrickable
+          </a>
+        </div>
+      </div>
+
+      <!-- Přidat -->
+      <div class="col-md-4">
+        <form method="POST" action="/sety/hledat">
+          <input type="hidden" name="action" value="pridat">
+          <input type="hidden" name="set_num" value="{{ nahled.set_num }}">
+          <input type="hidden" name="nazev" value="{{ nahled.name }}">
+          <input type="hidden" name="rok" value="{{ nahled.year or '' }}">
+          <input type="hidden" name="tema" value="{{ nahled.theme_id or '' }}">
+          <input type="hidden" name="obrazek_url" value="{{ nahled.set_img_url or '' }}">
+          <input type="hidden" name="pocet_dilku_v_setu" value="{{ nahled.num_parts or '' }}">
+
+          <div class="mb-3">
+            <label class="form-label fw-700">Počet kusů</label>
+            <input type="number" name="pocet_ks" value="1" min="1" max="99"
+                   class="form-control form-control-lg" style="border-radius:10px;font-weight:700;">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-700">Poznámka <span class="text-muted fw-400">(volitelné)</span></label>
+            <textarea name="poznamka" class="form-control" rows="2"
+                      style="border-radius:10px;" placeholder="Stav krabice, chybějící dílky..."></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-lego-blue w-100 btn-lg">
+            <i class="bi bi-plus-circle-fill"></i> Přidat do inventáře
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
